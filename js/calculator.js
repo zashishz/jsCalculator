@@ -10,7 +10,6 @@ var numbers = [];
 var operators = [];
 numberKey.map(function (val) {
     val.addEventListener('click', function (e) {
-        isClicked = true;
         num = num.length <8 ? (num + (e.target.innerHTML)): num;
         screen.innerHTML = (operators.length>0)?numbers[0]+operators[0]+num: num;
     })
@@ -32,25 +31,24 @@ funcKey.map(function (val) {
             numbers.length = 0;
             num = result.innerHTML;
         }
-        else if (num && numbers.length < 2) {
+        else if (num && operator != '=' && numbers.length < 2) {
             numbers.push(num);
             num = "";
             operators.push(operator);
             console.log(operators);
             console.log(numbers);
+            isClicked = false;
             screen.innerHTML = numbers[0]+operators[0];
-            if (operator == '=' ) {
-                let finalResult = operate(numbers[0], numbers[1], operators[0]);
+        } else if (operator == '=' && !isClicked){
+            numbers.push(num);
+            let finalResult = operate(numbers[0], numbers[1], operators[0]);
                 screen.innerHTML = numbers[0]+operators[0]+numbers[1];
                 finalResult = isInt(finalResult)?finalResult.toString():finalResult.toFixed(2).toString();
                 result.innerHTML = finalResult.length>10?"OUT OF RANGE": finalResult;
                 numbers.length = 0;
                 num = parseFloat(result.innerHTML);
                 operators.length = 0;
-                isClicked = false;
-            }
-        } else {
-
+                isClicked = true;
         }
     })
 });
