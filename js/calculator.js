@@ -1,3 +1,6 @@
+/**
+ * Get All references
+ */
 var numberKey = Array.from(document.querySelectorAll(".num"));
 var funcKey = Array.from(document.querySelectorAll(".func"));
 var result = document.getElementById("result");
@@ -6,16 +9,20 @@ result.innerHTML = 0;
 
 var num = "";
 var isClicked = false;
-var counter = 0;
+var decimalCounter = 0;
 var numbers = [];
 var operators = [];
+
+//if Pressed Key is a Number/Decimal
 numberKey.map(function (val) {
     val.addEventListener('click', function (e) {
         let number = e.target.innerHTML;
+
+        //No repetitive decimals are allowed
         if(number == '.') {
-            counter++;
+            decimalCounter++;
         }
-        if(number== '.' && counter >1) {
+        if(number== '.' && decimalCounter >1) {
             return;
         }
         num = num.length < 8 ? (num + (number)) : num;
@@ -23,11 +30,12 @@ numberKey.map(function (val) {
     })
 });
 
+//if Pressed Key is a Function
 funcKey.map(function (val) {
 
     val.addEventListener('click', function (e) {
         let operator = e.target.innerHTML;
-        counter = 0;
+        decimalCounter = 0;
         if (operator == "AC") {
             screen.innerHTML = "";
             result.innerHTML = 0;
@@ -35,7 +43,7 @@ funcKey.map(function (val) {
             operators.length = 0;
             num = "";
         } else if (operator == "CE") {
-            screen.innerHTML = "";
+            screen.innerHTML = result.innerHTML;
             operators.length = 0;
             numbers.length = 0;
             num = result.innerHTML;
@@ -45,17 +53,15 @@ funcKey.map(function (val) {
             num = "";
             operators.push(operator);
             if (operators[1]) {
-                let finalResult = operate(numbers[0], numbers[1], operators[0]);
-                finalResult = isInt(finalResult) ? finalResult.toString() : finalResult.toFixed(2).toString();
-                result.innerHTML = finalResult.length > 10 ? "OUT OF RANGE" : finalResult;
+                result.innerHTML = restrictDigits(numbers[0], numbers[1], operators[0]);
                 num = result.innerHTML;
                 let newOperator = operators[1];
-                screen.innerHTML = num + operators[1];
+                screen.innerHTML = num + newOperator;
                 numbers.length = 0;
                 operators.length = 0;
                 numbers[0] = num;
-                num = "";
                 operators[0] = newOperator;
+                num = "";                
                 isClicked = false;
             } else {
                 isClicked = false;
@@ -63,10 +69,8 @@ funcKey.map(function (val) {
             }
         } else if (operator == '=' && !isClicked) {
             numbers.push(num);
-            let finalResult = operate(numbers[0], numbers[1], operators[0]);
             screen.innerHTML = numbers[0] + operators[0] + numbers[1];
-            finalResult = isInt(finalResult) ? finalResult.toString() : finalResult.toFixed(2).toString();
-            result.innerHTML = finalResult.length > 10 ? "OUT OF RANGE" : finalResult;
+            result.innerHTML = restrictDigits(numbers[0], numbers[1], operators[0]);
             numbers.length = 0;
             num = parseFloat(result.innerHTML);
             operators.length = 0;
@@ -75,10 +79,19 @@ funcKey.map(function (val) {
     })
 });
 
+//to discriminate between Integer and Float type
 function isInt(n) {
     return n % 1 === 0;
 }
 
+// Evaluate
 function operate(num1, num2, operator) {
     return eval(num1 + operator + num2);
+}
+
+//Restrict result to 8 Digits
+function restrictDigits(num1, num2, operator) {
+    let finalResult = operate(num1, num2, operator);
+    finalResult = isInt(finalResult) ? finalResult.toString() : finalResult.toFixed(2).toString();
+    return finalResult.length > 10 ? "OUT OF RANGE" : finalResult;
 }
