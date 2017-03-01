@@ -12,21 +12,24 @@ var isClicked = false;
 var decimalCounter = 0;
 var numbers = [];
 var operators = [];
+var freeze = false;
 
 //if Pressed Key is a Number/Decimal
 numberKey.map(function (val) {
     val.addEventListener('click', function (e) {
-        let number = e.target.innerHTML;
+        if (!freeze) {
+            let number = e.target.innerHTML;
 
-        //No repetitive decimals are allowed
-        if(number == '.') {
-            decimalCounter++;
+            //No repetitive decimals are allowed
+            if (number == '.') {
+                decimalCounter++;
+            }
+            if (number == '.' && decimalCounter > 1) {
+                return;
+            }
+            num = num.length < 8 ? (num + (number)) : num;
+            screen.innerHTML = (operators.length > 0) ? numbers[0] + operators[0] + num : num;
         }
-        if(number== '.' && decimalCounter >1) {
-            return;
-        }
-        num = num.length < 8 ? (num + (number)) : num;
-        screen.innerHTML = (operators.length > 0) ? numbers[0] + operators[0] + num : num;
     })
 });
 
@@ -34,47 +37,63 @@ numberKey.map(function (val) {
 funcKey.map(function (val) {
 
     val.addEventListener('click', function (e) {
-        let operator = e.target.innerHTML;
-        decimalCounter = 0;
-        if (operator == "AC") {
-            screen.innerHTML = "";
-            result.innerHTML = 0;
-            numbers.length = 0;
-            operators.length = 0;
-            num = "";
-        } else if (operator == "CE") {
-            screen.innerHTML = result.innerHTML;
-            operators.length = 0;
-            numbers.length = 0;
-            num = result.innerHTML;
-        }
-        else if (num && operator != '=' && numbers.length <= 2) {
-            numbers.push(num);
-            num = "";
-            operators.push(operator);
-            if (operators[1]) {
-                result.innerHTML = restrictDigits(numbers[0], numbers[1], operators[0]);
-                num = result.innerHTML;
-                let newOperator = operators[1];
-                screen.innerHTML = num + newOperator;
+        if (!freeze || e.target.innerHTML =="AC") {
+            let operator = e.target.innerHTML;
+            decimalCounter = 0;
+            if (operator == "AC") {
+                screen.innerHTML = "";
+                result.innerHTML = 0;
                 numbers.length = 0;
                 operators.length = 0;
-                numbers[0] = num;
-                operators[0] = newOperator;
-                num = "";                
-                isClicked = false;
-            } else {
-                isClicked = false;
-                screen.innerHTML = numbers[0] + operators[0];
+                num = "";
+                freeze = false;
+            } else if (operator == "CE") {
+                screen.innerHTML = result.innerHTML != 0 ? result.innerHTML : "";
+                operators.length = 0;
+                numbers.length = 0;
+                num = screen.innerHTML;
             }
-        } else if (operator == '=' && !isClicked) {
-            numbers.push(num);
-            screen.innerHTML = numbers[0] + operators[0] + numbers[1];
-            result.innerHTML = restrictDigits(numbers[0], numbers[1], operators[0]);
-            numbers.length = 0;
-            num = parseFloat(result.innerHTML);
-            operators.length = 0;
-            isClicked = true;
+            else if (num && operator != '=' && numbers.length <= 2) {
+                if (num.length == 1 && num == ".") {
+                    return;
+                }
+                numbers.push(num);
+                num = "";
+                operators.push(operator);
+                if (operators[1]) {
+                    result.innerHTML = restrictDigits(numbers[0], numbers[1], operators[0]);
+                    if (result.innerHTML == "OUT OF RANGE" || result.innerHTML == "Infinity") {
+                        freeze = true;
+                        return;
+                    }
+                    num = result.innerHTML;
+                    let newOperator = operators[1];
+                    screen.innerHTML = num + newOperator;
+                    numbers.length = 0;
+                    operators.length = 0;
+                    numbers[0] = num;
+                    operators[0] = newOperator;
+                    num = "";
+                } else {
+                    screen.innerHTML = numbers[0] + operators[0];
+                }
+                isClicked = false;
+            } else if (operator == '=' && num && !isClicked) {
+                if (num.length == 1 && num == ".") {
+                    return;
+                }
+                numbers.push(num);
+                result.innerHTML = restrictDigits(numbers[0], numbers[1], operators[0]);
+                if (result.innerHTML == "OUT OF RANGE" || result.innerHTML == "Infinity") {
+                    freeze = true;
+                    return;
+                }
+                screen.innerHTML = numbers[0] + operators[0] + numbers[1];
+                numbers.length = 0;
+                num = parseFloat(result.innerHTML);
+                operators.length = 0;
+                isClicked = true;
+            }
         }
     })
 });
